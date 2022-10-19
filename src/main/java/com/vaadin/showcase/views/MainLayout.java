@@ -29,6 +29,7 @@ import com.vaadin.showcase.views.map.MapView;
 import com.vaadin.showcase.views.payment.PaymentView;
 import com.vaadin.showcase.views.people.PeopleView;
 import com.vaadin.showcase.views.pictures.PicturesView;
+import com.vaadin.showcase.views.products.ProductsView;
 import com.vaadin.showcase.views.templates.TemplatesView;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -159,6 +160,8 @@ public class MainLayout extends AppLayout {
                 new MenuItemInfo("People", "la la-columns", PeopleView.class), //
 
                 new MenuItemInfo("Adresses", "la la-columns", AdressesView.class), //
+
+                new MenuItemInfo("Products", "la la-columns", ProductsView.class), //
 
                 new MenuItemInfo("Books", "la la-columns", BooksView.class), //
 

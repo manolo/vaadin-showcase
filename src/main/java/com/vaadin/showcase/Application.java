@@ -18,7 +18,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @NpmPackage(value = "@fontsource/coming-soon", version = "4.5.0")
-@Theme(value = "showcase", variant = Lumo.DARK)
+@Theme(value = "showcase", variant = Lumo.LIGHT)
 @PWA(name = "Showcase", shortName = "Showcase", offlineResources = {})
 @Push
 @NpmPackage(value = "line-awesome", version = "1.3.0")
