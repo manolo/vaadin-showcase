@@ -2,8 +2,12 @@ package com.example.application.views.aichat;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.vaadin.voiceengine.VoiceEngine;
-
+import org.vaadin.webspeech.SpeechSynthesis;
+import org.vaadin.webspeech.Utterance;
+import org.vaadin.webspeech.ui.DictationButton;
+import org.vaadin.webspeech.ui.LanguageSelect;
+import org.vaadin.webspeech.ui.ReadAloudButton;
+import org.vaadin.webspeech.ui.VoiceSelect;
 
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
@@ -39,8 +43,26 @@ public class AiChatView extends VerticalLayout {
 
     public AiChatView(ChatClient.Builder chatClientBuilder, @Value("${spring.ai.openai.apikey}") String apikey) {
         ChatClient chatClient = chatClientBuilder.build();
-        VoiceEngine voiceEngine = new VoiceEngine().setButtons(VoiceEngine.Buttons.MICROPHONE, VoiceEngine.Buttons.PLAY,
-                VoiceEngine.Buttons.CANCEL, VoiceEngine.Buttons.LANG, VoiceEngine.Buttons.VOICE);
+        DictationButton mic = new DictationButton(textField);
+        mic.setContinuous(false);
+        mic.setAppend(false);
+        mic.setIconOnly(true);
+        mic.setTexts("Ask by voice", "Listening");
+        mic.addThemeVariants(ButtonVariant.TERTIARY);
+        textField.setSuffixComponent(mic);
+
+        ReadAloudButton readAloud = new ReadAloudButton(textArea);
+        LanguageSelect languageSelect = new LanguageSelect();
+        VoiceSelect voiceSelect = new VoiceSelect();
+        languageSelect.addValueChangeListener(e -> {
+            voiceSelect.setLanguage(e.getValue());
+            mic.setLang(e.getValue());
+            readAloud.setLang(e.getValue());
+        });
+        voiceSelect.addValueChangeListener(e -> readAloud.setVoice(e.getValue()));
+        // iOS Safari only speaks later if speech was started in a user gesture first
+        SpeechSynthesis.prime(button);
+        SpeechSynthesis.prime(mic);
 
         boolean apikeyPresent = apikey != null;
 
@@ -50,7 +72,7 @@ public class AiChatView extends VerticalLayout {
         textArea.bindReadOnly(streaming);
         button.bindEnabled(Signal.computed(() -> apikeyPresent && !question.get().isBlank() && !streaming.get()));
 
-        HorizontalLayout questionRow = new HorizontalLayout(textField, button, voiceEngine);
+        HorizontalLayout questionRow = new HorizontalLayout(textField, button);
         UI ui = UI.getCurrent();
         button.addClickListener(e -> {
             response.set("");
@@ -60,15 +82,19 @@ public class AiChatView extends VerticalLayout {
                     error -> ui.access(() -> streaming.set(false)),
                     () -> ui.access(() -> {
                         streaming.set(false);
-                        voiceEngine.play(response.peek());
+                        SpeechSynthesis.speak(Utterance.builder(response.peek())
+                                .lang(languageSelect.getValue()).voice(voiceSelect.getValue()).build());
                     }));
         });
 
         button.addClickShortcut(Key.ENTER);
 
-        voiceEngine.addEndListener(e -> {
-            question.set(voiceEngine.getRecorded());
-            button.click();
+        mic.getRecognition().finishBefore(button);
+        mic.getRecognition().addEndListener(text -> {
+            if (!text.isBlank()) {
+                question.set(textField.getValue());
+                button.click();
+            }
         });
         this.setSizeFull();
         textArea.setSizeFull();
@@ -87,8 +113,10 @@ public class AiChatView extends VerticalLayout {
                 value -> Notification.show("Reply copied"),
                 error -> Notification.show("Could not copy: " + error.message()));
 
-        HorizontalLayout responseHeader = new HorizontalLayout(copy);
+        HorizontalLayout responseHeader = new HorizontalLayout(languageSelect, voiceSelect, readAloud, copy);
         responseHeader.setWidthFull();
+        responseHeader.setWrap(true);
+        responseHeader.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.END);
         responseHeader.setJustifyContentMode(com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.END);
 
         add(questionRow, responseHeader, textArea);

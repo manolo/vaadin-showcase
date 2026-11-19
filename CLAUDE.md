@@ -110,7 +110,7 @@ The side nav has three top-level folders, classified by route first-segment in
 
 - `vaadin-spreadsheet-flow` - Spreadsheet component
 - `grid-pagination` (org.vaadin.klaudeta) - Grid pagination
-- `voice-engine` (org.vaadin.addons.manolo) - Voice recognition
+- `web-speech` (org.parttio) - Speech recognition and synthesis
 - `vcf-input-mask` (org.vaadin.addons.componentfactory) - Input masking
 - `line-awesome` (org.parttio) - Icon library
 
